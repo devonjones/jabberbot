@@ -80,6 +80,8 @@ class JabberBot(object):
                 self.log.debug('Registered command: %s' % name)
                 self.commands[name] = value
 
+        self.roster = None
+
 ################################
 
     def _send_status(self):
@@ -300,9 +302,12 @@ class JabberBot(object):
 
         try:
             subscription = self.roster.getSubscription(str(jid))
-        except KeyError, ke:
+        except KeyError, e:
             # User not on our roster
             subscription = None
+        except AttributeError, e:
+            # Recieved presence update before roster built
+            return
 
         if type_ == 'error':
             self.log.error(presence.getError())
