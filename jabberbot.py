@@ -61,6 +61,7 @@ class JabberBot(object):
 
     def __init__(self, username, password, res=None, debug=False):
         """Initializes the jabber bot and sets up commands."""
+        self.__debug = debug
         self.log = logging.getLogger(__name__)
         self.__username = username
         self.__password = password
