@@ -302,7 +302,7 @@ class JabberBot(object):
             self.status_type_changed(jid, self.OFFLINE)
 
         try:
-            subscription = self.roster.getSubscription(str(jid))
+            subscription = self.roster.getSubscription(unicode(jid.__str__()))
         except KeyError, e:
             # User not on our roster
             subscription = None
