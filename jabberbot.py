@@ -27,9 +27,12 @@ try:
 except ImportError:
     print >>sys.stderr, 'You need to install xmpppy from http://xmpppy.sf.net/.'
     sys.exit(-1)
+
+import time
 import inspect
 import logging
 import traceback
+import threading
 
 """A simple jabber/xmpp bot framework"""
 
@@ -59,9 +62,11 @@ class JabberBot(object):
     MSG_AUTHORIZE_ME = 'Hey there. You are not yet on my roster. Authorize my request and I will do the same.'
     MSG_NOT_AUTHORIZED = 'You did not authorize my subscription request. Access denied.'
 
-    def __init__(self, username, password, res=None, debug=False):
+    def __init__(self, username, password, res=None, debug=False, keepalive=True):
         """Initializes the jabber bot and sets up commands."""
         self.__debug = debug
+        self.__keepalive = keepalive
+        self.__keepalive_time = 60
         self.log = logging.getLogger(__name__)
         self.__username = username
         self.__password = password
@@ -140,6 +145,19 @@ class JabberBot(object):
             self.log.info('*** roster ***')
             self.conn.RegisterHandler('message', self.callback_message)
             self.conn.RegisterHandler('presence', self.callback_presence)
+
+            # keep bot alive even during long periods of inactivity
+            if self.__keepalive:
+                def _keepalive_f():
+                    while True:
+                        time.sleep(self.__keepalive_time)
+                        self._send_status()
+                keepalive_th = threading.Thread(target=_keepalive_f)
+                keepalive_th.setDaemon(True)
+                keepalive_th.start()
+
+                # prevents from running the daemon more than once
+                self.__keepalive = False
 
         return self.conn
 
