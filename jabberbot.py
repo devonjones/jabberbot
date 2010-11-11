@@ -32,7 +32,6 @@ import time
 import inspect
 import logging
 import traceback
-import threading
 
 """A simple jabber/xmpp bot framework"""
 
@@ -62,11 +61,12 @@ class JabberBot(object):
     MSG_AUTHORIZE_ME = 'Hey there. You are not yet on my roster. Authorize my request and I will do the same.'
     MSG_NOT_AUTHORIZED = 'You did not authorize my subscription request. Access denied.'
 
-    def __init__(self, username, password, res=None, debug=False, keepalive=True):
+    PING_FREQUENCY = 0 # Set to the number of seconds, e.g. 60.
+    PING_TIMEOUT = 2 # Seconds to wait for a response.
+
+    def __init__(self, username, password, res=None, debug=False):
         """Initializes the jabber bot and sets up commands."""
         self.__debug = debug
-        self.__keepalive = keepalive
-        self.__keepalive_time = 60
         self.log = logging.getLogger(__name__)
         self.__username = username
         self.__password = password
@@ -78,6 +78,7 @@ class JabberBot(object):
         self.__status = None
         self.__seen = {}
         self.__threads = {}
+        self.__lastping = None
 
         self.commands = {}
         for name, value in inspect.getmembers(self):
@@ -145,19 +146,6 @@ class JabberBot(object):
             self.log.info('*** roster ***')
             self.conn.RegisterHandler('message', self.callback_message)
             self.conn.RegisterHandler('presence', self.callback_presence)
-
-            # keep bot alive even during long periods of inactivity
-            if self.__keepalive:
-                def _keepalive_f():
-                    while True:
-                        time.sleep(self.__keepalive_time)
-                        self._send_status()
-                keepalive_th = threading.Thread(target=_keepalive_f)
-                keepalive_th.setDaemon(True)
-                keepalive_th.start()
-
-                # prevents from running the daemon more than once
-                self.__keepalive = False
 
         return self.conn
 
@@ -296,6 +284,7 @@ class JabberBot(object):
                 self.send(jid, message)
 
     def callback_presence(self, conn, presence):
+        self.__lastping = time.time()
         jid, type_, show, status = presence.getFrom(), \
                 presence.getType(), presence.getShow(), \
                 presence.getStatus()
@@ -354,6 +343,7 @@ class JabberBot(object):
 
     def callback_message( self, conn, mess):
         """Messages sent to the bot will arrive here. Command handling + routing is done in this function."""
+        self.__lastping = time.time()
 
         # Prepare to handle either private chats or group chats
         type     = mess.getType()
@@ -476,7 +466,29 @@ class JabberBot(object):
 
     def idle_proc( self):
         """This function will be called in the main loop."""
-        pass
+        self._idle_ping()
+
+    def _idle_ping(self):
+        """Pings the server, calls on_ping_timeout() on no response.
+
+        To enable set self.PING_FREQUENCY to a value higher than zero.
+        """
+        if self.PING_FREQUENCY and time.time() - self.__lastping > self.PING_FREQUENCY:
+            self.__lastping = time.time()
+            #logging.debug('Pinging the server.')
+            ping = xmpp.Protocol('iq',typ='get',payload=[xmpp.Node('ping',attrs={'xmlns':'urn:xmpp:ping'})])
+            try:
+                res = self.conn.SendAndWaitForResponse(ping, self.PING_TIMEOUT)
+                #logging.debug('Got response: ' + str(res))
+                if res is None:
+                    self.on_ping_timeout()
+            except IOError, e:
+                logging.error('Error pinging the server: %s, treating as ping timeout.' % e)
+                self.on_ping_timeout()
+
+    def on_ping_timeout(self):
+        logging.info('Terminating due to PING timeout.')
+        self.quit()
 
     def shutdown(self):
         """This function will be called when we're done serving
@@ -497,6 +509,7 @@ class JabberBot(object):
 
         if connect_callback:
             connect_callback()
+        self.__lastping = time.time()
 
         while not self.__finished:
             try:
