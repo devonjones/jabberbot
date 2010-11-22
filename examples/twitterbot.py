@@ -1,6 +1,6 @@
 
 # TwitterBot: Example Twitter but using python-jabberbot
-# Copyright (c) 2008 Thomas Perl <thpinfo.com>
+# Copyright (c) 2008 Thomas Perl <thp.io/about>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Homepage: http://thpinfo.com/2007/python-jabberbot/
+# Homepage: http://thp.io/2007/python-jabberbot/
 
 import twitter
 import jabberbot

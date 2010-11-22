@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # Setup script for python-jabberbot
-# by Thomas Perl <thpinfo.com>
+# by Thomas Perl <thp.io/about>
 
 from distutils.core import setup
 

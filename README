@@ -9,9 +9,9 @@ use to get started can be found in the "examples/" subdirectory.
 
 You need to have the "xmpppy" module installed, as jabberbot depends on it.
 
-[1] http://thpinfo.com/2007/python-jabberbot/
+[1] http://thp.io/2007/python-jabberbot/
 [2] http://repo.or.cz/w/gpodder.git
 [3] git://repo.or.cz/gpodder.git
 
--- Thomas Perl <thpinfo.com>
+-- Thomas Perl <thp.io/about>
 

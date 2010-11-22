@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# Homepage: http://thpinfo.com/2007/python-jabberbot/
+# Homepage: http://thp.io/2007/python-jabberbot/
 
 """
 When the bot is connected, use commands like:
