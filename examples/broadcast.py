@@ -28,6 +28,7 @@ from jabberbot import JabberBot, botcmd
 
 import threading
 import time 
+import logging
 
 # Fill in the JID + Password of your JabberBot here...
 (JID, PASSWORD) = ('my-jabber-id@jabberserver.example.org','my-password')
@@ -37,6 +38,16 @@ class BroadcastingJabberBot(JabberBot):
 
     def __init__( self, jid, password, res = None):
         super( BroadcastingJabberBot, self).__init__( jid, password, res)
+        # create console handler
+        chandler = logging.StreamHandler()
+        # create formatter
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        # add formatter to handler
+        chandler.setFormatter(formatter)
+        # add handler to logger
+        self.log.addHandler(chandler)
+        # set level to INFO
+        self.log.setLevel(logging.INFO)
 
         self.users = []
         self.message_queue = []
@@ -50,7 +61,7 @@ class BroadcastingJabberBot(JabberBot):
             return 'You are already subscribed.'
         else:
             self.users.append( user)
-            self.log( '%s subscribed to the broadcast.' % user)
+            self.log.info( '%s subscribed to the broadcast.' % user)
             return 'You are now subscribed.'
 
     @botcmd
@@ -61,7 +72,7 @@ class BroadcastingJabberBot(JabberBot):
             return 'You are not subscribed!'
         else:
             self.users.remove( user)
-            self.log( '%s unsubscribed from the broadcast.' % user)
+            self.log.info( '%s unsubscribed from the broadcast.' % user)
             return 'You are now unsubscribed.'
     
     # You can use the "hidden" parameter to hide the
@@ -70,7 +81,7 @@ class BroadcastingJabberBot(JabberBot):
     def broadcast( self, mess, args):
         """Sends out a broadcast, supply message as arguments (e.g. broadcast hello)"""
         self.message_queue.append( 'broadcast: %s (from %s)' % ( args, str(mess.getFrom()), ))
-        self.log( '%s sent out a message to %d users.' % ( str(mess.getFrom()), len(self.users),))
+        self.log.info( '%s sent out a message to %d users.' % ( str(mess.getFrom()), len(self.users),))
 
     def idle_proc( self):
         if not len(self.message_queue):
@@ -82,7 +93,7 @@ class BroadcastingJabberBot(JabberBot):
 
         for message in messages:
             if len(self.users):
-                self.log('sending "%s" to %d user(s).' % ( message, len(self.users), ))
+                self.log.info('sending "%s" to %d user(s).' % ( message, len(self.users), ))
             for user in self.users:
                 self.send( user, message)
 
