@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # JabberBot: A simple jabber/xmpp bot framework
-# Copyright (c) 2007-2010 Thomas Perl <thp.io/about>
+# Copyright (c) 2007-2011 Thomas Perl <thp.io/about>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,7 +36,7 @@ import traceback
 """A simple jabber/xmpp bot framework"""
 
 __author__ = 'Thomas Perl <m@thp.io>'
-__version__ = '0.10'
+__version__ = '0.11'
 __website__ = 'http://thp.io/2007/python-jabberbot/'
 __license__ = 'GPLv3 or later'
 
