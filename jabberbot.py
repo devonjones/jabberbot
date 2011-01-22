@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+"""A simple Jabber/XMPP bot framework"""
 
 import os
 import re
@@ -32,8 +33,6 @@ import time
 import inspect
 import logging
 import traceback
-
-"""A simple jabber/xmpp bot framework"""
 
 __author__ = 'Thomas Perl <m@thp.io>'
 __version__ = '0.11'
