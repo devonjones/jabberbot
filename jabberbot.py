@@ -63,8 +63,14 @@ class JabberBot(object):
     PING_FREQUENCY = 0 # Set to the number of seconds, e.g. 60.
     PING_TIMEOUT = 2 # Seconds to wait for a response.
 
-    def __init__(self, username, password, res=None, debug=False):
-        """Initializes the jabber bot and sets up commands."""
+    def __init__(self, username, password, res=None, debug=False, privatedomain=False):
+        """Initializes the jabber bot and sets up commands.
+
+        If privatedomain is provided, it should be either
+        True to only allow subscriptions from the same domain
+        as the bot or a string that describes the domain for
+        which subscriptions are accepted (e.g. 'jabber.org').
+        """
         self.__debug = debug
         self.log = logging.getLogger(__name__)
         self.__username = username
@@ -78,6 +84,7 @@ class JabberBot(object):
         self.__seen = {}
         self.__threads = {}
         self.__lastping = None
+        self.__privatedomain = privatedomain
 
         self.commands = {}
         for name, value in inspect.getmembers(self):
@@ -320,6 +327,21 @@ class JabberBot(object):
             self.log.error(presence.getError())
 
         self.log.debug('Got presence: %s (type: %s, show: %s, status: %s, subscription: %s)' % (jid, type_, show, status, subscription))
+
+        # If subscription is private, disregard anything not from the private domain
+        if self.__privatedomain and type_ in ('subscribe', 'subscribed', 'unsubscribe'):
+            if self.__privatedomain == True:
+                # Use the bot's domain
+                domain = self.jid.getDomain()
+            else:
+                # Use the specified domain
+                domain = self.__privatedomain
+
+            # Check if the sender is in the private domain
+            user_domain = jid.getDomain()
+            if domain != user_domain:
+                self.log.info('Ignoring subscribe request: %s does not match private domain (%s)' % (user_domain, domain))
+                return
 
         if type_ == 'subscribe':
             # Incoming presence subscription request
