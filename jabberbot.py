@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""A simple Jabber/XMPP bot framework"""
+"""A simple framework for creating Jabber/XMPP bots and services"""
 
 import os
 import re
@@ -35,7 +35,7 @@ import logging
 import traceback
 
 __author__ = 'Thomas Perl <m@thp.io>'
-__version__ = '0.11'
+__version__ = '0.12'
 __website__ = 'http://thp.io/2007/python-jabberbot/'
 __license__ = 'GPLv3 or later'
 
