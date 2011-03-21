@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 # JabberBot: A simple jabber/xmpp bot framework
 # Copyright (c) 2007-2011 Thomas Perl <thp.io/about>
@@ -63,13 +64,19 @@ class JabberBot(object):
     PING_FREQUENCY = 0 # Set to the number of seconds, e.g. 60.
     PING_TIMEOUT = 2 # Seconds to wait for a response.
 
-    def __init__(self, username, password, res=None, debug=False, privatedomain=False):
+    def __init__(self, username, password, res=None, debug=False,
+            privatedomain=False, acceptownmsgs=False):
         """Initializes the jabber bot and sets up commands.
 
         If privatedomain is provided, it should be either
         True to only allow subscriptions from the same domain
         as the bot or a string that describes the domain for
         which subscriptions are accepted (e.g. 'jabber.org').
+
+        If acceptownmsgs it set to True, this bot will accept
+        messages from the same JID that the bot itself has. This
+        is useful when using JabberBot with a single Jabber account
+        and multiple instances that want to talk to each other.
         """
         self.__debug = debug
         self.log = logging.getLogger(__name__)
@@ -85,6 +92,7 @@ class JabberBot(object):
         self.__threads = {}
         self.__lastping = None
         self.__privatedomain = privatedomain
+        self.__acceptownmsgs = acceptownmsgs
 
         self.commands = {}
         for name, value in inspect.getmembers(self):
@@ -295,7 +303,7 @@ class JabberBot(object):
                 presence.getType(), presence.getShow(), \
                 presence.getStatus()
 
-        if self.jid.bareMatch(jid):
+        if self.jid.bareMatch(jid) and not self.__acceptownmsgs:
             # Ignore our own presence messages
             return
 
