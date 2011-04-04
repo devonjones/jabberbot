@@ -36,7 +36,7 @@ import logging
 import traceback
 
 __author__ = 'Thomas Perl <m@thp.io>'
-__version__ = '0.12'
+__version__ = '0.13'
 __website__ = 'http://thp.io/2007/python-jabberbot/'
 __license__ = 'GPLv3 or later'
 
