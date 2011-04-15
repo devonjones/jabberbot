@@ -90,7 +90,7 @@ class JabberBot(object):
         self.__status = None
         self.__seen = {}
         self.__threads = {}
-        self.__lastping = None
+        self.__lastping = time.time()
         self.__privatedomain = privatedomain
         self.__acceptownmsgs = acceptownmsgs
 
