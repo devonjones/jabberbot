@@ -418,11 +418,14 @@ class JabberBot(object):
         cmd = command.lower()
         self.log.debug("*** cmd = %s" % cmd)
 
-        if self.custom_message_handler:
-            # Try the custom handler first ...
+        if self.custom_message_handler is not None:
+            # Try the custom handler first. It can return None
+            # if you want JabberBot to fall back to the default.
             reply = self.custom_message_handler(mess, text)
-        elif self.commands.has_key(cmd):
-            # If no reply is given try the default method.
+        else:
+            reply = None
+
+        if reply is None and self.commands.has_key(cmd):
             try:
                 reply = self.commands[cmd](mess, args)
             except Exception, e:
