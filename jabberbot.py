@@ -143,14 +143,14 @@ class JabberBot(object):
             if not conres:
                 self.log.error('unable to connect to server %s.' % self.jid.getDomain())
                 return None
-            if conres <> 'tls':
+            if conres != 'tls':
                 self.log.warning('unable to establish secure connection - TLS failed!')
 
             authres = conn.auth(self.jid.getNode(), self.__password, self.res)
             if not authres:
                 self.log.error('unable to authorize with server.')
                 return None
-            if authres <> 'sasl':
+            if authres != 'sasl':
                 self.log.warning("unable to perform SASL auth os %s. Old authentication method used!" % self.jid.getDomain())
 
             conn.sendInitPresence()
