@@ -94,6 +94,8 @@ class JabberBot(object):
         self.__privatedomain = privatedomain
         self.__acceptownmsgs = acceptownmsgs
 
+        self.custom_message_handler = None
+
         self.commands = {}
         for name, value in inspect.getmembers(self):
             if inspect.ismethod(value) and getattr(value, '_jabberbot_command', False):
@@ -416,7 +418,11 @@ class JabberBot(object):
         cmd = command.lower()
         self.log.debug("*** cmd = %s" % cmd)
 
-        if self.commands.has_key(cmd):
+        if self.custom_message_handler:
+            # Try the custom handler first ...
+            reply = self.custom_message_handler(mess, text)
+        elif self.commands.has_key(cmd):
+            # If no reply is given try the default method.
             try:
                 reply = self.commands[cmd](mess, args)
             except Exception, e:
