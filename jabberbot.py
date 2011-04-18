@@ -27,7 +27,7 @@ import sys
 try:
     import xmpp
 except ImportError:
-    print >>sys.stderr, 'You need to install xmpppy from http://xmpppy.sf.net/.'
+    print >> sys.stderr, 'You need to install xmpppy from http://xmpppy.sf.net/.'
     sys.exit(-1)
 
 import time
@@ -132,25 +132,25 @@ class JabberBot(object):
 
 ################################
 
-    def connect( self):
+    def connect(self):
         if not self.conn:
             if self.__debug:
                 conn = xmpp.Client(self.jid.getDomain())
             else:
-                conn = xmpp.Client(self.jid.getDomain(), debug = [])
+                conn = xmpp.Client(self.jid.getDomain(), debug=[])
 
             conres = conn.connect()
             if not conres:
                 self.log.error('unable to connect to server %s.' % self.jid.getDomain())
                 return None
-            if conres<>'tls':
+            if conres <> 'tls':
                 self.log.warning('unable to establish secure connection - TLS failed!')
 
             authres = conn.auth(self.jid.getNode(), self.__password, self.res)
             if not authres:
                 self.log.error('unable to authorize with server.')
                 return None
-            if authres<>'sasl':
+            if authres <> 'sasl':
                 self.log.warning("unable to perform SASL auth os %s. Old authentication method used!" % self.jid.getDomain())
 
             conn.sendInitPresence()
@@ -172,7 +172,7 @@ class JabberBot(object):
         my_room_JID = '/'.join((room, username))
         self.connect().send(xmpp.Presence(to=my_room_JID))
 
-    def quit( self):
+    def quit(self):
         """Stop serving messages and exit.
 
         I find it is handy for development to run the
@@ -197,9 +197,9 @@ class JabberBot(object):
         NS_TUNE = 'http://jabber.org/protocol/tune'
         iq = xmpp.Iq(typ='set')
         iq.setFrom(self.jid)
-        iq.pubsub = iq.addChild('pubsub', namespace = xmpp.NS_PUBSUB)
-        iq.pubsub.publish = iq.pubsub.addChild('publish', attrs = { 'node' : NS_TUNE })
-        iq.pubsub.publish.item = iq.pubsub.publish.addChild('item', attrs= { 'id' : 'current' })
+        iq.pubsub = iq.addChild('pubsub', namespace=xmpp.NS_PUBSUB)
+        iq.pubsub.publish = iq.pubsub.addChild('publish', attrs={ 'node' : NS_TUNE })
+        iq.pubsub.publish.item = iq.pubsub.publish.addChild('item', attrs={ 'id' : 'current' })
         tune = iq.pubsub.publish.item.addChild('tune')
         tune.setNamespace(NS_TUNE)
 
@@ -241,7 +241,7 @@ class JabberBot(object):
 
     def send_simple_reply(self, mess, text, private=False):
         """Send a simple response to a message"""
-        self.send_message( self.build_reply(mess,text, private) )
+        self.send_message(self.build_reply(mess, text, private))
 
     def build_reply(self, mess, text=None, private=False):
         """Build a message for responding to another message.  Message is NOT sent"""
@@ -271,13 +271,13 @@ class JabberBot(object):
         return message
 
     def get_sender_username(self, mess):
-        """Extract the sender's user name from a message""" 
+        """Extract the sender's user name from a message"""
         type = mess.getType()
-        jid  = mess.getFrom()
+        jid = mess.getFrom()
         if type == "groupchat":
             username = jid.getResource()
         elif type == "chat":
-            username  = jid.getNode()
+            username = jid.getNode()
         else:
             username = ""
         return username
@@ -372,15 +372,15 @@ class JabberBot(object):
             self.send(jid, self.MSG_NOT_AUTHORIZED)
             self.roster.Unauthorize(jid)
 
-    def callback_message( self, conn, mess):
+    def callback_message(self, conn, mess):
         """Messages sent to the bot will arrive here. Command handling + routing is done in this function."""
         self.__lastping = time.time()
 
         # Prepare to handle either private chats or group chats
-        type     = mess.getType()
-        jid      = mess.getFrom()
-        props    = mess.getProperties()
-        text     = mess.getBody()
+        type = mess.getType()
+        jid = mess.getFrom()
+        props = mess.getProperties()
+        text = mess.getBody()
         username = self.get_sender_username(mess)
 
         if type not in ("groupchat", "chat"):
@@ -437,11 +437,11 @@ class JabberBot(object):
             # doesn't understand or aren't handled by unknown_command().
             default_reply = 'Unknown command: "%s". Type "help" for available commands.<b>blubb!</b>' % cmd
             if type == "groupchat": default_reply = None
-            reply = self.unknown_command( mess, cmd, args)
+            reply = self.unknown_command(mess, cmd, args)
             if reply is None:
                 reply = default_reply
         if reply:
-            self.send_simple_reply(mess,reply)
+            self.send_simple_reply(mess, reply)
 
     def unknown_command(self, mess, cmd, args):
         """Default handler for unknown commands
@@ -495,14 +495,14 @@ class JabberBot(object):
             else:
                 usage = 'That command is not defined.'
 
-        top    = self.top_of_help_message()
+        top = self.top_of_help_message()
         bottom = self.bottom_of_help_message()
-        if top   : top    = "%s\n\n" % top
+        if top   : top = "%s\n\n" % top
         if bottom: bottom = "\n\n%s" % bottom
 
-        return '%s%s\n\n%s%s' % ( top, description, usage, bottom )
+        return '%s%s\n\n%s%s' % (top, description, usage, bottom)
 
-    def idle_proc( self):
+    def idle_proc(self):
         """This function will be called in the main loop."""
         self._idle_ping()
 
@@ -514,7 +514,7 @@ class JabberBot(object):
         if self.PING_FREQUENCY and time.time() - self.__lastping > self.PING_FREQUENCY:
             self.__lastping = time.time()
             #logging.debug('Pinging the server.')
-            ping = xmpp.Protocol('iq',typ='get',payload=[xmpp.Node('ping',attrs={'xmlns':'urn:xmpp:ping'})])
+            ping = xmpp.Protocol('iq', typ='get', payload=[xmpp.Node('ping', attrs={'xmlns':'urn:xmpp:ping'})])
             try:
                 res = self.conn.SendAndWaitForResponse(ping, self.PING_TIMEOUT)
                 #logging.debug('Got response: ' + str(res))
@@ -536,7 +536,7 @@ class JabberBot(object):
         """
         pass
 
-    def serve_forever( self, connect_callback = None, disconnect_callback = None):
+    def serve_forever(self, connect_callback=None, disconnect_callback=None):
         """Connects to the server and handles messages."""
         conn = self.connect()
         if conn:
