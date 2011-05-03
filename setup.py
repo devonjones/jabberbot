@@ -4,14 +4,11 @@
 
 from distutils.core import setup
 
-import os
 import re
-import sys
 
-# Make sure that we import the local jabberbot module
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import jabberbot
-
+jabberbot_py = open('jabberbot.py').read()
+metadata = dict(re.findall("__([a-z]+)__ = '([^']+)'", jabberbot_py))
+docstrings = re.findall('"""(.*)"""', jabberbot_py)
 
 # How is the package going to be called?
 PACKAGE = 'jabberbot'
@@ -21,14 +18,15 @@ MODULES = (
         'jabberbot',
 )
 
-# These metadata fields are simply taken from the Jabberbot module
-VERSION = jabberbot.__version__
-WEBSITE = jabberbot.__website__
-LICENSE = jabberbot.__license__
-DESCRIPTION = jabberbot.__doc__
+# Metadata fields extracted from jabberbot.py
+AUTHOR_EMAIL = metadata['author']
+VERSION = metadata['version']
+WEBSITE = metadata['website']
+LICENSE = metadata['license']
+DESCRIPTION = docstrings[0]
 
 # Extract name and e-mail ("Firstname Lastname <mail@example.org>")
-AUTHOR, EMAIL = re.match(r'(.*) <(.*)>', jabberbot.__author__).groups()
+AUTHOR, EMAIL = re.match(r'(.*) <(.*)>', AUTHOR_EMAIL).groups()
 
 setup(name=PACKAGE,
       version=VERSION,

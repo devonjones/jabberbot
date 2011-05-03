@@ -35,6 +35,7 @@ import inspect
 import logging
 import traceback
 
+# Will be parsed by setup.py to determine package metadata
 __author__ = 'Thomas Perl <m@thp.io>'
 __version__ = '0.13'
 __website__ = 'http://thp.io/2007/python-jabberbot/'
