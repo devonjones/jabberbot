@@ -571,4 +571,4 @@ class JabberBot(object):
         if disconnect_callback:
             disconnect_callback()
 
-
+# vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4
