@@ -444,7 +444,7 @@ class JabberBot(object):
             # In private chat, it's okay for the bot to always respond.
             # In group chat, the bot should silently ignore commands it
             # doesn't understand or aren't handled by unknown_command().
-            default_reply = 'Unknown command: "%s". Type "help" for available commands.<b>blubb!</b>' % cmd
+            default_reply = 'Unknown command: "%s". Type "help" for available commands.' % cmd
             if type == "groupchat": default_reply = None
             reply = self.unknown_command(mess, cmd, args)
             if reply is None:
