@@ -306,9 +306,17 @@ class JabberBot(object):
                 presence.getType(), presence.getShow(), \
                 presence.getStatus()
 
-        if self.jid.bareMatch(jid) and not self.__acceptownmsgs:
-            # Ignore our own presence messages
-            return
+        if self.jid.bareMatch(jid):
+            # update internal status
+            if type_ != self.OFFLINE:
+               self.__status = status
+               self.__show = show
+            else:
+               self.__status = ""
+               self.__show = self.OFFLINE
+            if not self.__acceptownmsgs:
+               # Ignore our own presence messages
+               return
 
         if type_ is None:
             # Keep track of status message and type changes
