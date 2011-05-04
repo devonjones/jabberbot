@@ -283,6 +283,15 @@ class JabberBot(object):
             username = ""
         return username
 
+    def get_full_jids(self, jid):
+        """Returns all full jids, which belong to a bare jid
+
+        Example: A bare jid is bob@jabber.org, with two clients connected, which
+        have the full jids bob@jabber.org/home and bob@jabber.org/work."""
+        for res in self.roster.getResources(jid):
+            full_jid = "%s/%s" % (jid,res)
+            yield full_jid
+
     def status_type_changed(self, jid, new_status_type):
         """Callback for tracking status types (available, away, offline, ...)"""
         self.log.debug('user %s changed status to %s' % (jid, new_status_type))
