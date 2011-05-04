@@ -398,7 +398,7 @@ class JabberBot(object):
         if xmpp.NS_DELAY in props: return
 
         # Ignore messages from myself
-        if username == self.__username: return
+        if self.jid.bareMatch(jid): return
 
         # If a message format is not supported (eg. encrypted), txt will be None
         if not text: return
