@@ -61,6 +61,9 @@ class JabberBot(object):
 
     MSG_AUTHORIZE_ME = 'Hey there. You are not yet on my roster. Authorize my request and I will do the same.'
     MSG_NOT_AUTHORIZED = 'You did not authorize my subscription request. Access denied.'
+    MSG_UNKNOWN_COMMAND = 'Unknown command: "%(command)s". Type "help" for available commands.'
+    MSG_HELP_TAIL = 'Type help <command name> to get more info about that specific command.'
+    MSG_HELP_UNDEFINED_COMMAND = 'That command is not defined.'
 
     PING_FREQUENCY = 0 # Set to the number of seconds, e.g. 60.
     PING_TIMEOUT = 2 # Seconds to wait for a response.
@@ -463,8 +466,7 @@ class JabberBot(object):
             if type == 'groupchat':
                 default_reply = None
             else:
-                default_reply = ('Unknown command: "%s". ' + \
-                                 'Type "help" for available commands.') % cmd
+                default_reply = self.MSG_UNKNOWN_COMMAND % {'command': cmd}
             reply = self.unknown_command(mess, cmd, args)
             if reply is None:
                 reply = default_reply
@@ -515,13 +517,14 @@ class JabberBot(object):
                 '%s: %s' % (name, (command.__doc__.strip() or '(undocumented)').split('\n', 1)[0])
                 for (name, command) in self.commands.iteritems() if name != 'help' and not command._jabberbot_hidden
             ]))
-            usage = usage + '\n\nType help <command name> to get more info about that specific command.'
+            usage += '\n\n'
+            usage += self.MSG_HELP_TAIL
         else:
             description = ''
             if args in self.commands:
                 usage = self.commands[args].__doc__.strip() or 'undocumented'
             else:
-                usage = 'That command is not defined.'
+                usage = self.MSG_HELP_UNDEFINED_COMMAND
 
         top = self.top_of_help_message()
         bottom = self.bottom_of_help_message()
