@@ -170,12 +170,16 @@ class JabberBot(object):
 
         return self.conn
 
-    def join_room(self, room, username=None):
+    def join_room(self, room, username=None, password=None):
         """Join the specified multi-user chat room"""
+        NS_MUC = 'http://jabber.org/protocol/muc'
         if username is None:
             username = self.__username.split('@')[0]
         my_room_JID = '/'.join((room, username))
-        self.connect().send(xmpp.Presence(to=my_room_JID))
+        pres = xmpp.Presence(to=my_room_JID)
+        if password is not None:
+	    pres.setTag('x',namespace=NS_MUC).setTagData('password',password)
+        self.connect().send(pres)
 
     def quit(self):
         """Stop serving messages and exit.
