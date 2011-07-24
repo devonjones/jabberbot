@@ -509,7 +509,7 @@ class JabberBot(object):
 
     @botcmd
     def help(self, mess, args):
-        """Returns a help string listing available options.
+        """   Returns a help string listing available options.
 
         Automatically assigned to the "help" command."""
         if not args:
@@ -519,7 +519,7 @@ class JabberBot(object):
                 description = 'Available commands:'
 
             usage = '\n'.join(sorted([
-                '%s: %s' % (name, (command.__doc__.strip() or '(undocumented)').split('\n', 1)[0])
+                '%s: %s' % (name, (command.__doc__ or '(undocumented)').strip().split('\n', 1)[0])
                 for (name, command) in self.commands.iteritems() if name != 'help' and not command._jabberbot_hidden
             ]))
             usage = '\n\n'.join(filter(None, [usage,
@@ -527,7 +527,7 @@ class JabberBot(object):
         else:
             description = ''
             if args in self.commands:
-                usage = self.commands[args].__doc__.strip() or 'undocumented'
+                usage = (self.commands[args].__doc__ or 'undocumented').strip()
             else:
                 usage = self.MSG_HELP_UNDEFINED_COMMAND
 
