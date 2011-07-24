@@ -23,6 +23,7 @@
 import os
 import re
 import sys
+import cgi
 
 try:
     import xmpp
@@ -517,8 +518,8 @@ class JabberBot(object):
                 '%s: %s' % (name, (command.__doc__.strip() or '(undocumented)').split('\n', 1)[0])
                 for (name, command) in self.commands.iteritems() if name != 'help' and not command._jabberbot_hidden
             ]))
-            usage += '\n\n'
-            usage += self.MSG_HELP_TAIL
+            usage = '\n\n'.join(filter(None, [usage,
+                cgi.escape(self.MSG_HELP_TAIL)]))
         else:
             description = ''
             if args in self.commands:
@@ -528,10 +529,7 @@ class JabberBot(object):
 
         top = self.top_of_help_message()
         bottom = self.bottom_of_help_message()
-        if top   : top = "%s\n\n" % top
-        if bottom: bottom = "\n\n%s" % bottom
-
-        return '%s%s\n\n%s%s' % (top, description, usage, bottom)
+        return '\n\n'.join(filter(None, [top, description, usage, bottom]))
 
     def idle_proc(self):
         """This function will be called in the main loop."""
