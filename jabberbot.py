@@ -3,6 +3,7 @@
 
 # JabberBot: A simple jabber/xmpp bot framework
 # Copyright (c) 2007-2011 Thomas Perl <thp.io/about>
+# $Id$
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -105,7 +106,7 @@ class JabberBot(object):
         for name, value in inspect.getmembers(self):
             if inspect.ismethod(value) and getattr(value, '_jabberbot_command', False):
                 name = getattr(value, '_jabberbot_command_name')
-                self.log.debug('Registered command: %s' % name)
+                self.log.info('Registered command: %s' % name)
                 self.commands[name] = value
 
         self.roster = None
