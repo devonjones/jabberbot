@@ -233,7 +233,7 @@ class JabberBot(object):
             tune.addChild('uri').addData(song['uri'])
 
         if debug:
-            print 'Sending tune:', iq.__str__().encode('utf8')
+            self.log.info('Sending tune: %s' % iq.__str__().encode('utf8'))
         self.conn.send(iq)
 
     def send(self, user, text, in_reply_to=None, message_type='chat'):
