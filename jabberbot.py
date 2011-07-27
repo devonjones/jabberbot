@@ -66,6 +66,7 @@ class JabberBot(object):
     MSG_UNKNOWN_COMMAND = 'Unknown command: "%(command)s". Type "help" for available commands.'
     MSG_HELP_TAIL = 'Type help <command name> to get more info about that specific command.'
     MSG_HELP_UNDEFINED_COMMAND = 'That command is not defined.'
+    MSG_ERROR_OCCURRED = 'Sorry for your inconvenience. An unexpected error occurred.'
 
     PING_FREQUENCY = 0 # Set to the number of seconds, e.g. 60.
     PING_TIMEOUT = 2 # Seconds to wait for a response.
@@ -463,8 +464,8 @@ class JabberBot(object):
             try:
                 reply = self.commands[cmd](mess, args)
             except Exception, e:
-                reply = traceback.format_exc(e)
-                self.log.exception('An error happened while processing a message ("%s") from %s: %s"' % (text, jid, reply))
+                self.log.exception('An error happened while processing a message ("%s") from %s: %s"' % (text, jid, traceback.format_exc(e)))
+                reply = self.MSG_ERROR_OCCURRED
         else:
             # In private chat, it's okay for the bot to always respond.
             # In group chat, the bot should silently ignore commands it
