@@ -267,18 +267,20 @@ class JabberBot(object):
         return response
 
     def build_message(self, text):
-        """Builds an xhtml message without attributes."""
-        text_plain = re.sub(r'<[^>]+>', '', text)
-        message = xmpp.protocol.Message(body=text_plain)
+        """Builds an xhtml message without attributes. If input is not valid xhtml-im fallback to normal."""
+        text_plain = re.sub(r'<[^>]+>', '', text) # Try to determine if text has xhtml-tags - TODO needs improvement
         if text_plain != text:
-            html = xmpp.Node('html', {'xmlns': 'http://jabber.org/protocol/xhtml-im'})
+            message = xmpp.protocol.Message(body=text_plain) # Create body w stripped tags for reciptiens w/o xhtml-abilities - FIXME unescape &quot; etc.
+            html = xmpp.Node('html', {'xmlns': 'http://jabber.org/protocol/xhtml-im'}) # Start creating a xhtml body
             try:
                 html.addChild(node=xmpp.simplexml.XML2Node("<body xmlns='http://www.w3.org/1999/xhtml'>" + text.encode('utf-8') + "</body>"))
                 message.addChild(node=html)
             except Exception, e:
                 # Didn't work, incorrect markup or something.
-                # print >> sys.stderr, e, text
-                message = xmpp.protocol.Message(body=text_plain)
+                self.log.debug('An error while building a xhtml message. Fallback to normal messagebody')
+                message = None # Fallback - don't sanitize invalid input. User is responsible!
+        if message is None:
+            message = xmpp.protocol.Message(body=text) # Normal body
         return message
 
     def get_sender_username(self, mess):
@@ -524,8 +526,7 @@ class JabberBot(object):
                 '%s: %s' % (name, (command.__doc__ or '(undocumented)').strip().split('\n', 1)[0])
                 for (name, command) in self.commands.iteritems() if name != 'help' and not command._jabberbot_hidden
             ]))
-            usage = '\n\n'.join(filter(None, [usage,
-                cgi.escape(self.MSG_HELP_TAIL)]))
+            usage = '\n\n'.join(filter(None, [usage, self.MSG_HELP_TAIL]))
         else:
             description = ''
             if args in self.commands:
