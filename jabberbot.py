@@ -417,17 +417,17 @@ class JabberBot(object):
             self.log.debug("unhandled message type: %s" % type)
             return
 
-        self.log.debug("*** props = %s" % props)
-        self.log.debug("*** jid = %s" % jid)
-        self.log.debug("*** username = %s" % username)
-        self.log.debug("*** type = %s" % type)
-        self.log.debug("*** text = %s" % text)
-
         # Ignore messages from before we joined
         if xmpp.NS_DELAY in props: return
 
         # Ignore messages from myself
         if self.jid.bareMatch(jid): return
+        
+        self.log.debug("*** props = %s" % props)
+        self.log.debug("*** jid = %s" % jid)
+        self.log.debug("*** username = %s" % username)
+        self.log.debug("*** type = %s" % type)
+        self.log.debug("*** text = %s" % text)
 
         # If a message format is not supported (eg. encrypted), txt will be None
         if not text: return
