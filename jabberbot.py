@@ -268,6 +268,7 @@ class JabberBot(object):
 
     def build_message(self, text):
         """Builds an xhtml message without attributes. If input is not valid xhtml-im fallback to normal."""
+        message = None # fixes local variable 'message' referenced before assignment - Thanks to Aleksandr
         text_plain = re.sub(r'<[^>]+>', '', text) # Try to determine if text has xhtml-tags - TODO needs improvement
         if text_plain != text:
             message = xmpp.protocol.Message(body=text_plain) # Create body w stripped tags for reciptiens w/o xhtml-abilities - FIXME unescape &quot; etc.
