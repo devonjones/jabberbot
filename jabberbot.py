@@ -19,7 +19,14 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-"""A simple framework for creating Jabber/XMPP bots and services"""
+"""
+A framework for writing Jabber/XMPP bots and services
+
+The JabberBot framework allows you to easily write bots
+that use the XMPP protocol. You can create commands by
+decorating functions in your subclass or customize the
+bot's operation completely. MUCs are also supported.
+"""
 
 import os
 import re
@@ -29,7 +36,10 @@ import cgi
 try:
     import xmpp
 except ImportError:
-    print >> sys.stderr, 'You need to install xmpppy from http://xmpppy.sf.net/.'
+    print >> sys.stderr, """
+    You need to install xmpppy from http://xmpppy.sf.net/.
+    On Debian-based systems, install the python-xmpp package.
+    """
     sys.exit(-1)
 
 import time
@@ -39,9 +49,9 @@ import traceback
 
 # Will be parsed by setup.py to determine package metadata
 __author__ = 'Thomas Perl <m@thp.io>'
-__version__ = '0.13'
+__version__ = '0.14'
 __website__ = 'http://thp.io/2007/python-jabberbot/'
-__license__ = 'GPLv3 or later'
+__license__ = 'GNU General Public License version 3 or later'
 
 def botcmd(*args, **kwargs):
     """Decorator for bot command functions"""
