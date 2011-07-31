@@ -31,7 +31,6 @@ bot's operation completely. MUCs are also supported.
 import os
 import re
 import sys
-import cgi
 
 try:
     import xmpp
