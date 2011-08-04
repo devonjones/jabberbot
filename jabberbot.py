@@ -68,14 +68,22 @@ def botcmd(*args, **kwargs):
 
 
 class JabberBot(object):
-    AVAILABLE, AWAY, CHAT, DND, XA, OFFLINE = None, 'away', 'chat', 'dnd', 'xa', 'unavailable'
+    # Show types for presence
+    AVAILABLE, AWAY, CHAT = None, 'away', 'chat'
+    DND, XA, OFFLINE = 'dnd', 'xa', 'unavailable'
 
-    MSG_AUTHORIZE_ME = 'Hey there. You are not yet on my roster. Authorize my request and I will do the same.'
-    MSG_NOT_AUTHORIZED = 'You did not authorize my subscription request. Access denied.'
-    MSG_UNKNOWN_COMMAND = 'Unknown command: "%(command)s". Type "help" for available commands.'
-    MSG_HELP_TAIL = 'Type help <command name> to get more info about that specific command.'
+    # UI-messages (overwrite to change content)
+    MSG_AUTHORIZE_ME = 'Hey there. You are not yet on my roster. ' \
+        'Authorize my request and I will do the same.'
+    MSG_NOT_AUTHORIZED = 'You did not authorize my subscription request. '\
+        'Access denied.'
+    MSG_UNKNOWN_COMMAND = 'Unknown command: "%(command)s". '\
+        'Type "help" for available commands.'
+    MSG_HELP_TAIL = 'Type help <command name> to get more info '\
+        'about that specific command.'
     MSG_HELP_UNDEFINED_COMMAND = 'That command is not defined.'
-    MSG_ERROR_OCCURRED = 'Sorry for your inconvenience. An unexpected error occurred.'
+    MSG_ERROR_OCCURRED = 'Sorry for your inconvenience. '\
+        'An unexpected error occurred.'
 
     PING_FREQUENCY = 0 # Set to the number of seconds, e.g. 60.
     PING_TIMEOUT = 2 # Seconds to wait for a response.
@@ -83,6 +91,14 @@ class JabberBot(object):
     def __init__(self, username, password, res=None, debug=False,
             privatedomain=False, acceptownmsgs=False):
         """Initializes the jabber bot and sets up commands.
+        
+        username and password should be clear ;)
+        
+        If res provided, res will be ressourcename,
+        otherwise it defaults to classname of childclass
+        
+        If debug is True log messages of xmpppy will be printed to console.
+        Logging of Jabberbot itself is NOT affected.
 
         If privatedomain is provided, it should be either
         True to only allow subscriptions from the same domain
@@ -94,6 +110,7 @@ class JabberBot(object):
         is useful when using JabberBot with a single Jabber account
         and multiple instances that want to talk to each other.
         """
+        # TODO sort this initialisation thematically
         self.__debug = debug
         self.log = logging.getLogger(__name__)
         self.__username = username
@@ -114,7 +131,8 @@ class JabberBot(object):
 
         self.commands = {}
         for name, value in inspect.getmembers(self):
-            if inspect.ismethod(value) and getattr(value, '_jabberbot_command', False):
+            if inspect.ismethod(value) and getattr(value, \
+            '_jabberbot_command', False):
                 name = getattr(value, '_jabberbot_command_name')
                 self.log.info('Registered command: %s' % name)
                 self.commands[name] = value
@@ -124,67 +142,95 @@ class JabberBot(object):
 ################################
 
     def _send_status(self):
-        self.conn.send(xmpp.dispatcher.Presence(show=self.__show, status=self.__status))
+        """Send status to everyone"""
+        self.conn.send(xmpp.dispatcher.Presence(show=self.__show, 
+            status=self.__status))
 
     def __set_status(self, value):
+        """Set status message.
+        If value remains constant, no presence stanza will be send"""
         if self.__status != value:
             self.__status = value
             self._send_status()
 
     def __get_status(self):
+        """Get current status message"""
         return self.__status
 
     status_message = property(fget=__get_status, fset=__set_status)
 
     def __set_show(self, value):
+        """Set show (status type like AWAY, DND etc.).
+        If value remains constant, no presence stanza will be send"""
         if self.__show != value:
             self.__show = value
             self._send_status()
 
     def __get_show(self):
+        """Get current show (status type like AWAY, DND etc.)."""
         return self.__show
 
     status_type = property(fget=__get_show, fset=__set_show)
 
 ################################
 
+    #TODO multiple custom handler
     def connect(self):
+        """Connects the bot to server or returns current connection,
+        send inital presence stanza
+        and registers handlers
+        """
         if not self.conn:
+	    #TODO improve debug
             if self.__debug:
                 conn = xmpp.Client(self.jid.getDomain())
             else:
                 conn = xmpp.Client(self.jid.getDomain(), debug=[])
 
+            #connection attempt
             conres = conn.connect()
             if not conres:
-                self.log.error('unable to connect to server %s.' % self.jid.getDomain())
+                self.log.error('unable to connect to server %s.' %
+		  self.jid.getDomain())
                 return None
             if conres != 'tls':
-                self.log.warning('unable to establish secure connection - TLS failed!')
+                self.log.warning('unable to establish secure connection '\
+                '- TLS failed!')
 
             authres = conn.auth(self.jid.getNode(), self.__password, self.res)
             if not authres:
                 self.log.error('unable to authorize with server.')
                 return None
             if authres != 'sasl':
-                self.log.warning("unable to perform SASL auth os %s. Old authentication method used!" % self.jid.getDomain())
+                self.log.warning("unable to perform SASL auth on %s. "\
+                "Old authentication method used!" % self.jid.getDomain())
 
-            conn.sendInitPresence()
+            #Connection established - save connection
             self.conn = conn
+            
+            #Send initial presence stanza (say hello to everyone)
+            self.conn.sendInitPresence()
+            #Save roster and log Items
             self.roster = self.conn.Roster.getRoster()
             self.log.info('*** roster ***')
             for contact in self.roster.getItems():
                 self.log.info('  %s' % contact)
             self.log.info('*** roster ***')
+            
+            #Register handler for incoming stanza
             self.conn.RegisterHandler('message', self.callback_message)
             self.conn.RegisterHandler('presence', self.callback_presence)
 
         return self.conn
 
     def join_room(self, room, username=None, password=None):
-        """Join the specified multi-user chat room"""
+        """Join the specified multi-user chat room
+        
+        If username is NOT provided fallback to node part of JID"""
+        # TODO fix namespacestrings and history settings
         NS_MUC = 'http://jabber.org/protocol/muc'
         if username is None:
+	  # TODO use xmpppy function getNode
             username = self.__username.split('@')[0]
         my_room_JID = '/'.join((room, username))
         pres = xmpp.Presence(to=my_room_JID)
@@ -218,8 +264,10 @@ class JabberBot(object):
         iq = xmpp.Iq(typ='set')
         iq.setFrom(self.jid)
         iq.pubsub = iq.addChild('pubsub', namespace=xmpp.NS_PUBSUB)
-        iq.pubsub.publish = iq.pubsub.addChild('publish', attrs={ 'node' : NS_TUNE })
-        iq.pubsub.publish.item = iq.pubsub.publish.addChild('item', attrs={ 'id' : 'current' })
+        iq.pubsub.publish = iq.pubsub.addChild('publish',
+          attrs={ 'node' : NS_TUNE })
+        iq.pubsub.publish.item = iq.pubsub.publish.addChild('item',
+          attrs={ 'id' : 'current' })
         tune = iq.pubsub.publish.item.addChild('tune')
         tune.setNamespace(NS_TUNE)
 
@@ -264,7 +312,8 @@ class JabberBot(object):
         self.send_message(self.build_reply(mess, text, private))
 
     def build_reply(self, mess, text=None, private=False):
-        """Build a message for responding to another message.  Message is NOT sent"""
+        """Build a message for responding to another message.
+        Message is NOT sent"""
         response = self.build_message(text)
         if private:
             response.setTo(mess.getFrom())
@@ -276,21 +325,32 @@ class JabberBot(object):
         return response
 
     def build_message(self, text):
-        """Builds an xhtml message without attributes. If input is not valid xhtml-im fallback to normal."""
-        message = None # fixes local variable 'message' referenced before assignment - Thanks to Aleksandr
-        text_plain = re.sub(r'<[^>]+>', '', text) # Try to determine if text has xhtml-tags - TODO needs improvement
+        """Builds an xhtml message without attributes.
+        If input is not valid xhtml-im fallback to normal."""
+        message = None # init message variable
+        # Try to determine if text has xhtml-tags - TODO needs improvement
+        text_plain = re.sub(r'<[^>]+>', '', text) 
         if text_plain != text:
-            message = xmpp.protocol.Message(body=text_plain) # Create body w stripped tags for reciptiens w/o xhtml-abilities - FIXME unescape &quot; etc.
-            html = xmpp.Node('html', {'xmlns': 'http://jabber.org/protocol/xhtml-im'}) # Start creating a xhtml body
+            # Create body w stripped tags for reciptiens w/o xhtml-abilities
+            # FIXME unescape &quot; etc.
+            message = xmpp.protocol.Message(body=text_plain)
+            # Start creating a xhtml body
+            html = xmpp.Node('html', \
+                {'xmlns': 'http://jabber.org/protocol/xhtml-im'})
             try:
-                html.addChild(node=xmpp.simplexml.XML2Node("<body xmlns='http://www.w3.org/1999/xhtml'>" + text.encode('utf-8') + "</body>"))
+                html.addChild(node=xmpp.simplexml.XML2Node( \
+                    "<body xmlns='http://www.w3.org/1999/xhtml'>" + \
+                    text.encode('utf-8') + "</body>"))
                 message.addChild(node=html)
             except Exception, e:
                 # Didn't work, incorrect markup or something.
-                self.log.debug('An error while building a xhtml message. Fallback to normal messagebody')
-                message = None # Fallback - don't sanitize invalid input. User is responsible!
+                self.log.debug('An error while building a xhtml message. '\
+                'Fallback to normal messagebody')
+                # Fallback - don't sanitize invalid input. User is responsible!
+                message = None
         if message is None:
-            message = xmpp.protocol.Message(body=text) # Normal body
+	    # Normal body
+            message = xmpp.protocol.Message(body=text)
         return message
 
     def get_sender_username(self, mess):
@@ -308,19 +368,21 @@ class JabberBot(object):
     def get_full_jids(self, jid):
         """Returns all full jids, which belong to a bare jid
 
-        Example: A bare jid is bob@jabber.org, with two clients connected, which
+        Example: A bare jid is bob@jabber.org, with two clients connected,
+        which
         have the full jids bob@jabber.org/home and bob@jabber.org/work."""
         for res in self.roster.getResources(jid):
             full_jid = "%s/%s" % (jid,res)
             yield full_jid
 
     def status_type_changed(self, jid, new_status_type):
-        """Callback for tracking status types (available, away, offline, ...)"""
+        """Callback for tracking status types (dnd, away, offline, ...)"""
         self.log.debug('user %s changed status to %s' % (jid, new_status_type))
 
     def status_message_changed(self, jid, new_status_message):
         """Callback for tracking status messages (the free-form status text)"""
-        self.log.debug('user %s updated text to %s' % (jid, new_status_message))
+        self.log.debug('user %s updated text to %s' % 
+            (jid, new_status_message))
 
     def broadcast(self, message, only_available=False):
         """Broadcast a message to all users 'seen' by this bot.
@@ -376,10 +438,13 @@ class JabberBot(object):
         if type_ == 'error':
             self.log.error(presence.getError())
 
-        self.log.debug('Got presence: %s (type: %s, show: %s, status: %s, subscription: %s)' % (jid, type_, show, status, subscription))
+        self.log.debug('Got presence: %s (type: %s, show: %s, status: %s, '\
+            'subscription: %s)' % (jid, type_, show, status, subscription))
 
-        # If subscription is private, disregard anything not from the private domain
-        if self.__privatedomain and type_ in ('subscribe', 'subscribed', 'unsubscribe'):
+        # If subscription is private,
+        # disregard anything not from the private domain
+        if self.__privatedomain and type_ in ('subscribe', 'subscribed', \
+            'unsubscribe'):
             if self.__privatedomain == True:
                 # Use the bot's domain
                 domain = self.jid.getDomain()
@@ -390,7 +455,8 @@ class JabberBot(object):
             # Check if the sender is in the private domain
             user_domain = jid.getDomain()
             if domain != user_domain:
-                self.log.info('Ignoring subscribe request: %s does not match private domain (%s)' % (user_domain, domain))
+                self.log.info('Ignoring subscribe request: %s does not '\
+                'match private domain (%s)' % (user_domain, domain))
                 return
 
         if type_ == 'subscribe':
@@ -413,7 +479,8 @@ class JabberBot(object):
             self.roster.Unauthorize(jid)
 
     def callback_message(self, conn, mess):
-        """Messages sent to the bot will arrive here. Command handling + routing is done in this function."""
+        """Messages sent to the bot will arrive here.
+        Command handling + routing is done in this function."""
         self.__lastping = time.time()
 
         # Prepare to handle either private chats or group chats
@@ -439,13 +506,15 @@ class JabberBot(object):
         self.log.debug("*** type = %s" % type)
         self.log.debug("*** text = %s" % text)
 
-        # If a message format is not supported (eg. encrypted), txt will be None
+        # If a message format is not supported (eg. encrypted),
+        # txt will be None
         if not text: return
 
         # Ignore messages from users not seen by this bot
         if jid not in self.__seen:
             self.log.info('Ignoring message from unseen guest: %s' % jid)
-            self.log.debug("I've seen: %s" % ["%s" % x for x in self.__seen.keys()])
+            self.log.debug("I've seen: %s" % 
+                ["%s" % x for x in self.__seen.keys()])
             return
 
         # Remember the last-talked-in thread for replies
@@ -476,7 +545,9 @@ class JabberBot(object):
             try:
                 reply = self.commands[cmd](mess, args)
             except Exception, e:
-                self.log.exception('An error happened while processing a message ("%s") from %s: %s"' % (text, jid, traceback.format_exc(e)))
+                self.log.exception('An error happened while processing '\
+                    'a message ("%s") from %s: %s"' % 
+                    (text, jid, traceback.format_exc(e)))
                 reply = self.MSG_ERROR_OCCURRED
         else:
             # In private chat, it's okay for the bot to always respond.
@@ -533,20 +604,24 @@ class JabberBot(object):
                 description = 'Available commands:'
 
             usage = '\n'.join(sorted([
-                '%s: %s' % (name, (command.__doc__ or '(undocumented)').strip().split('\n', 1)[0])
-                for (name, command) in self.commands.iteritems() if name != 'help' and not command._jabberbot_hidden
+                '%s: %s' % (name, (command.__doc__ or \
+                    '(undocumented)').strip().split('\n', 1)[0])
+                for (name, command) in self.commands.iteritems() \
+                    if name != 'help' \
+                    and not command._jabberbot_hidden
             ]))
-            usage = '\n\n'.join(filter(None, [usage, self.MSG_HELP_TAIL]))
+            usage = '\n\n'.join([usage, self.MSG_HELP_TAIL])
         else:
             description = ''
             if args in self.commands:
-                usage = (self.commands[args].__doc__ or 'undocumented').strip()
+                usage = (self.commands[args].__doc__ or \
+                    'undocumented').strip()
             else:
                 usage = self.MSG_HELP_UNDEFINED_COMMAND
 
         top = self.top_of_help_message()
         bottom = self.bottom_of_help_message()
-        return '\n\n'.join(filter(None, [top, description, usage, bottom]))
+        return '\n\n'.join([top, description, usage, bottom])
 
     def idle_proc(self):
         """This function will be called in the main loop."""
@@ -557,17 +632,20 @@ class JabberBot(object):
 
         To enable set self.PING_FREQUENCY to a value higher than zero.
         """
-        if self.PING_FREQUENCY and time.time() - self.__lastping > self.PING_FREQUENCY:
+        if self.PING_FREQUENCY \
+            and time.time() - self.__lastping > self.PING_FREQUENCY:
             self.__lastping = time.time()
             #logging.debug('Pinging the server.')
-            ping = xmpp.Protocol('iq', typ='get', payload=[xmpp.Node('ping', attrs={'xmlns':'urn:xmpp:ping'})])
+            ping = xmpp.Protocol('iq', typ='get', \
+                payload=[xmpp.Node('ping', attrs={'xmlns':'urn:xmpp:ping'})])
             try:
                 res = self.conn.SendAndWaitForResponse(ping, self.PING_TIMEOUT)
                 #logging.debug('Got response: ' + str(res))
                 if res is None:
                     self.on_ping_timeout()
             except IOError, e:
-                logging.error('Error pinging the server: %s, treating as ping timeout.' % e)
+                logging.error('Error pinging the server: %s, '\
+                    'treating as ping timeout.' % e)
                 self.on_ping_timeout()
 
     def on_ping_timeout(self):
@@ -600,7 +678,8 @@ class JabberBot(object):
                 conn.Process(1)
                 self.idle_proc()
             except KeyboardInterrupt:
-                self.log.info('bot stopped by user request. shutting down.')
+                self.log.info('bot stopped by user request. '\
+                    'shutting down.')
                 break
 
         self.shutdown()
