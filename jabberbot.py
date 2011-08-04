@@ -89,7 +89,7 @@ class JabberBot(object):
     PING_TIMEOUT = 2 # Seconds to wait for a response.
 
     def __init__(self, username, password, res=None, debug=False,
-            privatedomain=False, acceptownmsgs=False):
+            privatedomain=False, acceptownmsgs=False, handlers=None):
         """Initializes the jabber bot and sets up commands.
         
         username and password should be clear ;)
@@ -109,6 +109,14 @@ class JabberBot(object):
         messages from the same JID that the bot itself has. This
         is useful when using JabberBot with a single Jabber account
         and multiple instances that want to talk to each other.
+        
+        If handlers are provided, default handlers won't be enabled.
+        Usage like: [('stanzatype1', function1), ('stanzatype2', function2)]
+        Signature of function should be callback_xx(self, conn, stanza),
+        where conn is the connection and stanza the current stanza in process.
+        First handler in list will be served first.
+        Don't forget to raise exception xmpp.NodeProcessed to stop
+        processing in other handlers (see callback_presence)
         """
         # TODO sort this initialisation thematically
         self.__debug = debug
@@ -127,8 +135,10 @@ class JabberBot(object):
         self.__privatedomain = privatedomain
         self.__acceptownmsgs = acceptownmsgs
 
-        self.custom_message_handler = None
+        self.handlers = (handlers or [('message', self.callback_message),
+                    ('presence', self.callback_presence)])
 
+        # Collect commands from source
         self.commands = {}
         for name, value in inspect.getmembers(self):
             if inspect.ismethod(value) and getattr(value, \
@@ -174,7 +184,6 @@ class JabberBot(object):
 
 ################################
 
-    #TODO multiple custom handler
     def connect(self):
         """Connects the bot to server or returns current connection,
         send inital presence stanza
@@ -205,22 +214,23 @@ class JabberBot(object):
                 self.log.warning("unable to perform SASL auth on %s. "\
                 "Old authentication method used!" % self.jid.getDomain())
 
-            #Connection established - save connection
+            # Connection established - save connection
             self.conn = conn
             
-            #Send initial presence stanza (say hello to everyone)
+            # Send initial presence stanza (say hello to everyone)
             self.conn.sendInitPresence()
-            #Save roster and log Items
+            # Save roster and log Items
             self.roster = self.conn.Roster.getRoster()
             self.log.info('*** roster ***')
             for contact in self.roster.getItems():
                 self.log.info('  %s' % contact)
             self.log.info('*** roster ***')
             
-            #Register handler for incoming stanza
-            self.conn.RegisterHandler('message', self.callback_message)
-            self.conn.RegisterHandler('presence', self.callback_presence)
-
+            # Register given handlers (TODO move to own function)
+            for (handler, callback) in self.handlers:
+                self.conn.RegisterHandler(handler, callback)
+                self.log.debug('Registered handler: %s' % handler)
+                
         return self.conn
 
     def join_room(self, room, username=None, password=None):
@@ -527,21 +537,7 @@ class JabberBot(object):
         cmd = command.lower()
         self.log.debug("*** cmd = %s" % cmd)
 
-        if self.custom_message_handler is not None:
-            # Try the custom handler first. It can return None
-            # if you want JabberBot to fall back to the default.
-            reply = self.custom_message_handler(mess, text)
-
-            # If your custom_message_handler returns True, it
-            # is assumed that the custom_message_handler has
-            # taken care of processing the message, so we do
-            # not process the message any further here.
-            if reply == True:
-                return
-        else:
-            reply = None
-
-        if reply is None and self.commands.has_key(cmd):
+        if self.commands.has_key(cmd):
             try:
                 reply = self.commands[cmd](mess, args)
             except Exception, e:
