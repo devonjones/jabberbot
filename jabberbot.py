@@ -31,6 +31,7 @@ bot's operation completely. MUCs are also supported.
 import os
 import re
 import sys
+import thread
 
 try:
     import xmpp
@@ -55,10 +56,11 @@ __license__ = 'GNU General Public License version 3 or later'
 def botcmd(*args, **kwargs):
     """Decorator for bot command functions"""
 
-    def decorate(func, hidden=False, name=None):
+    def decorate(func, hidden=False, name=None, thread=False):
         setattr(func, '_jabberbot_command', True)
         setattr(func, '_jabberbot_hidden', hidden)
         setattr(func, '_jabberbot_command_name', name or func.__name__)
+        setattr(func, '_jabberbot_command_thread', thread)
         return func
 
     if len(args):
@@ -527,7 +529,8 @@ class JabberBot(object):
                 ["%s" % x for x in self.__seen.keys()])
             return
 
-        # Remember the last-talked-in thread for replies
+        # Remember the last-talked-in message thread for replies
+        # FIXME i am not threadsafe
         self.__threads[jid] = mess.getThread()
 
         if ' ' in text:
@@ -538,13 +541,22 @@ class JabberBot(object):
         self.log.debug("*** cmd = %s" % cmd)
 
         if self.commands.has_key(cmd):
-            try:
-                reply = self.commands[cmd](mess, args)
-            except Exception, e:
-                self.log.exception('An error happened while processing '\
-                    'a message ("%s") from %s: %s"' % 
-                    (text, jid, traceback.format_exc(e)))
-                reply = self.MSG_ERROR_OCCURRED
+	    def execute_and_send():
+                try:
+                    reply = self.commands[cmd](mess, args)
+                except Exception, e:
+                    self.log.exception('An error happened while processing '\
+                        'a message ("%s") from %s: %s"' % 
+                        (text, jid, traceback.format_exc(e)))
+                    reply = self.MSG_ERROR_OCCURRED
+                if reply:
+                    self.send_simple_reply(mess, reply)
+            
+            # if command should be executed in a seperate thread do it
+            if getattr(self.commands[cmd], '_jabberbot_command_thread'):
+                thread.start_new_thread(execute_and_send, ())
+            else:
+                execute_and_send()
         else:
             # In private chat, it's okay for the bot to always respond.
             # In group chat, the bot should silently ignore commands it
@@ -556,8 +568,8 @@ class JabberBot(object):
             reply = self.unknown_command(mess, cmd, args)
             if reply is None:
                 reply = default_reply
-        if reply:
-            self.send_simple_reply(mess, reply)
+            if reply:
+                self.send_simple_reply(mess, reply)
 
     def unknown_command(self, mess, cmd, args):
         """Default handler for unknown commands
