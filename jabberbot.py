@@ -58,7 +58,7 @@ def botcmd(*args, **kwargs):
 
     def decorate(func, hidden=False, name=None, thread=False):
         setattr(func, '_jabberbot_command', True)
-        setattr(func, '_jabberbot_hidden', hidden)
+        setattr(func, '_jabberbot_command_hidden', hidden)
         setattr(func, '_jabberbot_command_name', name or func.__name__)
         setattr(func, '_jabberbot_command_thread', thread)
         return func
@@ -553,7 +553,7 @@ class JabberBot(object):
                     self.send_simple_reply(mess, reply)
             
             # if command should be executed in a seperate thread do it
-            if getattr(self.commands[cmd], '_jabberbot_command_thread'):
+            if self.commands[cmd]._jabberbot_command_thread:
                 thread.start_new_thread(execute_and_send, ())
             else:
                 execute_and_send()
@@ -616,7 +616,7 @@ class JabberBot(object):
                     '(undocumented)').strip().split('\n', 1)[0])
                 for (name, command) in self.commands.iteritems() \
                     if name != 'help' \
-                    and not command._jabberbot_hidden
+                    and not command._jabberbot_command_hidden
             ]))
             usage = '\n\n'.join(['',usage, self.MSG_HELP_TAIL])
         else:
