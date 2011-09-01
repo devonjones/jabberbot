@@ -142,9 +142,8 @@ class JabberBot(object):
 
         # Collect commands from source
         self.commands = {}
-        for name, value in inspect.getmembers(self):
-            if inspect.ismethod(value) and getattr(value, \
-            '_jabberbot_command', False):
+        for name, value in inspect.getmembers(self, inspect.ismethod):
+            if getattr(value, '_jabberbot_command', False):
                 name = getattr(value, '_jabberbot_command_name')
                 self.log.info('Registered command: %s' % name)
                 self.commands[name] = value
