@@ -7,15 +7,25 @@ available at [2] (use [3] as Git clone URL). The contributors involved in
 this release can be found in the file AUTHORS. Example code that you can
 use to get started can be found in the "examples/" subdirectory.
 
+[1] http://thp.io/2007/python-jabberbot/
+[2] http://repo.or.cz/w/gpodder.git
+[3] git://repo.or.cz/gpodder.git
+
+
 Dependencies:
 
  * xmpppy (http://xmpppy.sf.net/)
    On Debian-based systems, xmpppy is packaged as "python-xmpp"
 
 
-[1] http://thp.io/2007/python-jabberbot/
-[2] http://repo.or.cz/w/gpodder.git
-[3] git://repo.or.cz/gpodder.git
+Mailing list:
 
--- Thomas Perl <thp.io/about>
+ pythonjabberbot-devel@lists.sourceforge.net
+ https://lists.sourceforge.net/lists/listinfo/pythonjabberbot-devel
+ http://sourceforge.net/mailarchive/forum.php?forum_name=pythonjabberbot-devel
+
+Bug tracker:
+
+ http://sourceforge.net/p/pythonjabberbot/tickets/
+
 
