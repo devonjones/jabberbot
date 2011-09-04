@@ -248,6 +248,31 @@ class JabberBot(object):
         if password is not None:
 	    pres.setTag('x',namespace=NS_MUC).setTagData('password',password)
         self.connect().send(pres)
+        
+    def kick(self, room, nick, reason=None):
+        """Kicks user from muc
+        Works only with sufficient rights."""
+        NS_MUCADMIN = 'http://jabber.org/protocol/muc#admin'
+        item = xmpp.simplexml.Node('item')
+        item.setAttr('nick', nick)
+        item.setAttr('role', 'none')
+        iq = xmpp.Iq(typ='set',queryNS=NS_MUCADMIN,xmlns=None,to=room,payload={item})
+        if reason is not None:
+	    item.setTagData('reason',reason)
+        self.connect().send(iq)
+
+    def invite(self, room, jid, reason=None):
+        """Invites user to muc.
+        Works only if user has permission to invite to muc"""
+        NS_MUCUSER = 'http://jabber.org/protocol/muc#user'
+        invite = xmpp.simplexml.Node('invite')
+        invite.setAttr('to',jid)
+        if reason is not None:
+           invite.setTagData('reason',reason)
+        mess = xmpp.Message(to=room)
+        mess.setTag('x',namespace=NS_MUCUSER).addChild(node=invite)
+        self.log.error(mess)
+        self.connect().send(mess)
 
     def quit(self):
         """Stop serving messages and exit.
