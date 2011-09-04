@@ -60,7 +60,7 @@ def botcmd(*args, **kwargs):
         setattr(func, '_jabberbot_command', True)
         setattr(func, '_jabberbot_command_hidden', hidden)
         setattr(func, '_jabberbot_command_name', name or func.__name__)
-        setattr(func, '_jabberbot_command_thread', thread)
+        setattr(func, '_jabberbot_command_thread', thread) # Experimental!
         return func
 
     if len(args):
@@ -575,7 +575,7 @@ class JabberBot(object):
                     reply = self.MSG_ERROR_OCCURRED
                 if reply:
                     self.send_simple_reply(mess, reply)
-            
+            # Experimental!
             # if command should be executed in a seperate thread do it
             if self.commands[cmd]._jabberbot_command_thread:
                 thread.start_new_thread(execute_and_send, ())
