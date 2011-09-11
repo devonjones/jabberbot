@@ -642,7 +642,7 @@ class JabberBot(object):
                     if name != 'help' \
                     and not command._jabberbot_command_hidden
             ]))
-            usage = '\n\n'.join(['',usage, self.MSG_HELP_TAIL])
+            usage = '\n\n' + '\n\n'.join(filter(None, [usage, self.MSG_HELP_TAIL]))
         else:
             description = ''
             if args in self.commands:
@@ -653,7 +653,7 @@ class JabberBot(object):
 
         top = self.top_of_help_message()
         bottom = self.bottom_of_help_message()
-        return ''.join([top, description, usage, bottom])
+        return ''.join(filter(None, [top, description, usage, bottom]))
 
     def idle_proc(self):
         """This function will be called in the main loop."""
