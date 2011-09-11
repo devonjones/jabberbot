@@ -3,14 +3,15 @@ Python-JabberBot
 ~~~~~~~~~~~~~~~~
 
 This is python-jabberbot. See [1] for more information. Source code is
-available at [2] (use [3] as Git clone URL). The contributors involved in
+available at [2] or [3] (use [4] or [5] as Git clone URL). The contributors involved in
 this release can be found in the file AUTHORS. Example code that you can
 use to get started can be found in the "examples/" subdirectory.
 
 [1] http://thp.io/2007/python-jabberbot/
-[2] http://repo.or.cz/w/gpodder.git
-[3] git://repo.or.cz/gpodder.git
-
+[2] http://repo.or.cz/w/jabberbot.git
+[3] http://sourceforge.net/p/pythonjabberbot/code/
+[4] git://repo.or.cz/jabberbot.git
+[5] git://git.code.sf.net/p/pythonjabberbot/code pythonjabberbot-code
 
 Dependencies:
 
