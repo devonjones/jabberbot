@@ -256,7 +256,7 @@ class JabberBot(object):
         item = xmpp.simplexml.Node('item')
         item.setAttr('nick', nick)
         item.setAttr('role', 'none')
-        iq = xmpp.Iq(typ='set',queryNS=NS_MUCADMIN,xmlns=None,to=room,payload={item})
+        iq = xmpp.Iq(typ='set',queryNS=NS_MUCADMIN,xmlns=None,to=room,payload=set([item]))
         if reason is not None:
 	    item.setTagData('reason',reason)
         self.connect().send(iq)
