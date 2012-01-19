@@ -430,7 +430,6 @@ class JabberBot(object):
                 self.send(jid, message)
 
     def callback_presence(self, conn, presence):
-        self.__lastping = time.time()
         jid, type_, show, status = presence.getFrom(), \
                 presence.getType(), presence.getShow(), \
                 presence.getStatus()
@@ -517,7 +516,6 @@ class JabberBot(object):
     def callback_message(self, conn, mess):
         """Messages sent to the bot will arrive here.
         Command handling + routing is done in this function."""
-        self.__lastping = time.time()
 
         # Prepare to handle either private chats or group chats
         type = mess.getType()
