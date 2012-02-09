@@ -80,8 +80,8 @@ class JabberBot(object):
     MSG_NOT_AUTHORIZED = 'You did not authorize my subscription request. '\
         'Access denied.'
     MSG_UNKNOWN_COMMAND = 'Unknown command: "%(command)s". '\
-        'Type "help" for available commands.'
-    MSG_HELP_TAIL = 'Type help <command name> to get more info '\
+        'Type "%(helpcommand)s" for available commands.'
+    MSG_HELP_TAIL = 'Type %(helpcommand)s <command name> to get more info '\
         'about that specific command.'
     MSG_HELP_UNDEFINED_COMMAND = 'That command is not defined.'
     MSG_ERROR_OCCURRED = 'Sorry for your inconvenience. '\
@@ -91,7 +91,8 @@ class JabberBot(object):
     PING_TIMEOUT = 2 # Seconds to wait for a response.
 
     def __init__(self, username, password, res=None, debug=False,
-            privatedomain=False, acceptownmsgs=False, handlers=None):
+            privatedomain=False, acceptownmsgs=False, handlers=None,
+            command_prefix=''):
         """Initializes the jabber bot and sets up commands.
         
         username and password should be clear ;)
@@ -119,6 +120,10 @@ class JabberBot(object):
         First handler in list will be served first.
         Don't forget to raise exception xmpp.NodeProcessed to stop
         processing in other handlers (see callback_presence)
+
+        If command_prefix is set to a string different from '' (the empty
+        string), it will require the commands to be prefixed with this text,
+        e.g. command_prefix = '!' means: Type "!info" for the "info" command.
         """
         # TODO sort this initialisation thematically
         self.__debug = debug
@@ -136,6 +141,7 @@ class JabberBot(object):
         self.__lastping = time.time()
         self.__privatedomain = privatedomain
         self.__acceptownmsgs = acceptownmsgs
+        self.__command_prefix = command_prefix
 
         self.handlers = (handlers or [('message', self.callback_message),
                     ('presence', self.callback_presence)])
@@ -146,7 +152,7 @@ class JabberBot(object):
             if getattr(value, '_jabberbot_command', False):
                 name = getattr(value, '_jabberbot_command_name')
                 self.log.info('Registered command: %s' % name)
-                self.commands[name] = value
+                self.commands[self.__command_prefix + name] = value
 
         self.roster = None
 
@@ -586,7 +592,10 @@ class JabberBot(object):
             if type == 'groupchat':
                 default_reply = None
             else:
-                default_reply = self.MSG_UNKNOWN_COMMAND % {'command': cmd}
+                default_reply = self.MSG_UNKNOWN_COMMAND % {
+                    'command': cmd,
+                    'helpcommand': self.__command_prefix + 'help',
+                }
             reply = self.unknown_command(mess, cmd, args)
             if reply is None:
                 reply = default_reply
@@ -637,12 +646,16 @@ class JabberBot(object):
                 '%s: %s' % (name, (command.__doc__ or \
                     '(undocumented)').strip().split('\n', 1)[0])
                 for (name, command) in self.commands.iteritems() \
-                    if name != 'help' \
+                    if name != (self.__command_prefix + 'help') \
                     and not command._jabberbot_command_hidden
             ]))
-            usage = '\n\n' + '\n\n'.join(filter(None, [usage, self.MSG_HELP_TAIL]))
+            usage = '\n\n' + '\n\n'.join(filter(None, [usage, self.MSG_HELP_TAIL % {'helpcommand': self.__command_prefix + 'help'}]))
         else:
             description = ''
+            if (args not in self.commands and
+                    (self.__command_prefix + args) in self.commands):
+                # Automatically add prefix if it's missing
+                args = self.__command_prefix + args
             if args in self.commands:
                 usage = (self.commands[args].__doc__ or \
                     'undocumented').strip()
