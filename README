@@ -2,31 +2,34 @@
 Python-JabberBot
 ~~~~~~~~~~~~~~~~
 
-This is python-jabberbot. See [1] for more information. Source code is
-available at [2] or [3] (use [4] or [5] as Git clone URL). The contributors involved in
-this release can be found in the file AUTHORS. Example code that you can
-use to get started can be found in the "examples/" subdirectory.
+A framework for writing IM/chat robots for the Jabber / XMPP protocol.
 
-[1] http://thp.io/2007/python-jabberbot/
-[2] http://repo.or.cz/w/jabberbot.git
-[3] http://sourceforge.net/p/pythonjabberbot/code/
-[4] git://repo.or.cz/jabberbot.git
-[5] git://git.code.sf.net/p/pythonjabberbot/code pythonjabberbot-code
+
+Website:
+
+   http://thp.io/2007/python-jabberbot/
+
+Source code:
+
+   http://sourceforge.net/p/pythonjabberbot/code/
+   Mirror: http://repo.or.cz/w/jabberbot.git
+
+Development version:
+
+   git clone git://git.code.sf.net/p/pythonjabberbot/code pythonjabberbot-code
 
 Dependencies:
 
- * xmpppy (http://xmpppy.sf.net/)
+   xmpppy (http://xmpppy.sf.net/)
    On Debian-based systems, xmpppy is packaged as "python-xmpp"
-
 
 Mailing list:
 
- pythonjabberbot-devel@lists.sourceforge.net
- https://lists.sourceforge.net/lists/listinfo/pythonjabberbot-devel
- http://sourceforge.net/mailarchive/forum.php?forum_name=pythonjabberbot-devel
+   pythonjabberbot-devel@lists.sourceforge.net
+   https://lists.sourceforge.net/lists/listinfo/pythonjabberbot-devel
+   http://sourceforge.net/mailarchive/forum.php?forum_name=pythonjabberbot-devel
 
 Bug tracker:
 
- http://sourceforge.net/p/pythonjabberbot/tickets/
-
+   http://sourceforge.net/p/pythonjabberbot/tickets/
 
