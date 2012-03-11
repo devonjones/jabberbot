@@ -240,9 +240,11 @@ class JabberBot(object):
                 self.log.debug('Registered handler: %s' % handler)
 
         return self.conn
+        
+### XEP-0045 Multi User Chat # prefix: muc # START ###
 
-    def join_room(self, room, username=None, password=None):
-        """Join the specified multi-user chat room
+    def muc_join_room(self, room, username=None, password=None, prefix=""):
+        """Join the specified multi-user chat room or changes nickname
 
         If username is NOT provided fallback to node part of JID"""
         # TODO fix namespacestrings and history settings
@@ -256,7 +258,19 @@ class JabberBot(object):
             pres.setTag('x', namespace=NS_MUC).setTagData('password', password)
         self.connect().send(pres)
 
-    def kick(self, room, nick, reason=None):
+    def muc_part_room(self, room, username=None, message=None):
+        """Parts the specified multi-user chat"""
+        if username is None:
+	  # TODO use xmpppy function getNode
+            username = self.__username.split('@')[0]
+        my_room_JID = '/'.join((room, username))
+        pres = xmpp.Presence(to=my_room_JID)
+        pres.setAttr('type','unavailable')
+        if message is not None:
+	    pres.setTagData('status',message)
+        self.connect().send(pres)
+        
+    def muc_kick(self, room, nick, reason=None):
         """Kicks user from muc
         Works only with sufficient rights."""
         NS_MUCADMIN = 'http://jabber.org/protocol/muc#admin'
@@ -268,8 +282,34 @@ class JabberBot(object):
         if reason is not None:
             item.setTagData('reason', reason)
         self.connect().send(iq)
+        
+    def muc_ban(self, room, nick, reason=None):
+        """Bans user from muc
+        Works only with sufficient rights."""
+        pass
+      
+    def muc_set_subject(self, room, text):
+        """Changes subject of muc
+        Works only with sufficient rights."""
+        mess = xmpp.Message(to=room)
+        mess.setAttr('type','groupchat')
+        mess.setTagData('subject', text)
+        self.connect().send(mess)
+      
+    def muc_get_subject(self, room):
+        """Get subject of muc"""
+        pass
+      
+    def muc_room_participants(self, room):
+        """Get list of participants """
+        pass
+      
+    def muc_get_role(self, room, nick=None):
+        """Get role of nick
+        If nick is None our own role will be returned"""
+        pass
 
-    def invite(self, room, jid, reason=None):
+    def muc_invite(self, room, jid, reason=None):
         """Invites user to muc.
         Works only if user has permission to invite to muc"""
         NS_MUCUSER = 'http://jabber.org/protocol/muc#user'
@@ -282,6 +322,8 @@ class JabberBot(object):
         self.log.error(mess)
         self.connect().send(mess)
 
+### XEP-0045 Multi User Chat # END ###
+        
     def quit(self):
         """Stop serving messages and exit.
 

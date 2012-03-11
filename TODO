@@ -1,0 +1,31 @@
+TODO - jabberbot.py
+
+fix acceptownmsgs
+- based on bareJID/fullJID
+- based on Nickname in MUC
+
+Admin-only-commands
+
+React on MUC-invitations
+- Parameter in constructor (invitable=False)
+
+Respect MUC statuscodes
+
+Behavior of prefix
+- Different behavior for direct/groupchat messages
+-- no prefix for direct messages
+- (none/default-prefix) in constructor / muc-specific-prefix (in muc_join_room)
+
+React on error-stanzas
+- Nickname already chosen
+- Kick/Ban/Invite/etc. not allowed
+
+Clean up code
+- sort functions related to XEPs
+
+Using transports
+- icq msn irc
+
+Documentation
+- First steps
+- PyDocs

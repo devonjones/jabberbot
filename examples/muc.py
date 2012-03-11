@@ -71,5 +71,5 @@ if __name__ == '__main__':
     chatroom = 'chatroom'
 
     mucbot = Example(username, password, only_direct=True)
-    mucbot.join_room(chatroom, nickname)
+    mucbot.muc_join_room(chatroom, nickname)
     mucbot.serve_forever()
