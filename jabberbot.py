@@ -240,7 +240,7 @@ class JabberBot(object):
                 self.log.debug('Registered handler: %s' % handler)
 
         return self.conn
-        
+
 ### XEP-0045 Multi User Chat # prefix: muc # START ###
 
     def muc_join_room(self, room, username=None, password=None, prefix=""):
@@ -261,49 +261,76 @@ class JabberBot(object):
     def muc_part_room(self, room, username=None, message=None):
         """Parts the specified multi-user chat"""
         if username is None:
-	  # TODO use xmpppy function getNode
+            # TODO use xmpppy function getNode
             username = self.__username.split('@')[0]
         my_room_JID = '/'.join((room, username))
         pres = xmpp.Presence(to=my_room_JID)
-        pres.setAttr('type','unavailable')
+        pres.setAttr('type', 'unavailable')
         if message is not None:
-	    pres.setTagData('status',message)
+            pres.setTagData('status', message)
         self.connect().send(pres)
-        
-    def muc_kick(self, room, nick, reason=None):
-        """Kicks user from muc
+
+    def muc_set_role(self, room, nick, role, reason=None):
+        """Set role to user from muc
+        reason works only if defined in protocol
         Works only with sufficient rights."""
         NS_MUCADMIN = 'http://jabber.org/protocol/muc#admin'
         item = xmpp.simplexml.Node('item')
-        item.setAttr('nick', nick)
-        item.setAttr('role', 'none')
+        item.setAttr('jid', jid)
+        item.setAttr('role', role)
         iq = xmpp.Iq(typ='set', queryNS=NS_MUCADMIN, xmlns=None, to=room,
                 payload=set([item]))
         if reason is not None:
             item.setTagData('reason', reason)
         self.connect().send(iq)
-        
-    def muc_ban(self, room, nick, reason=None):
+
+    def muc_kick(self, room, nick, reason=None):
+        """Kicks user from muc
+        Works only with sufficient rights."""
+        self.muc_set_role(room, nick, 'none', reason)
+
+
+    def muc_set_affiliation(self, room, jid, affiliation, reason=None):
+        """Set affiliation to user from muc
+        reason works only if defined in protocol
+        Works only with sufficient rights."""
+        NS_MUCADMIN = 'http://jabber.org/protocol/muc#admin'
+        item = xmpp.simplexml.Node('item')
+        item.setAttr('jid', jid)
+        item.setAttr('affiliation', affiliation)
+        iq = xmpp.Iq(typ='set', queryNS=NS_MUCADMIN, xmlns=None, to=room,
+                payload=set([item]))
+        if reason is not None:
+            item.setTagData('reason', reason)
+        self.connect().send(iq)
+
+    def muc_ban(self, room, jid, reason=None):
         """Bans user from muc
         Works only with sufficient rights."""
-        pass
-      
+        self.muc_set_affiliation(room, jid, 'outcast', reason)
+
+    def muc_unban(self, room, jid):
+        """Unbans user from muc
+        User will not regain old affiliation.
+        Works only with sufficient rights."""
+        self.muc_set_affiliation(room, jid, 'none')
+
     def muc_set_subject(self, room, text):
         """Changes subject of muc
         Works only with sufficient rights."""
         mess = xmpp.Message(to=room)
-        mess.setAttr('type','groupchat')
+        mess.setAttr('type', 'groupchat')
         mess.setTagData('subject', text)
         self.connect().send(mess)
-      
+
     def muc_get_subject(self, room):
         """Get subject of muc"""
         pass
-      
+
     def muc_room_participants(self, room):
         """Get list of participants """
         pass
-      
+
     def muc_get_role(self, room, nick=None):
         """Get role of nick
         If nick is None our own role will be returned"""
@@ -323,7 +350,7 @@ class JabberBot(object):
         self.connect().send(mess)
 
 ### XEP-0045 Multi User Chat # END ###
-        
+
     def quit(self):
         """Stop serving messages and exit.
 
