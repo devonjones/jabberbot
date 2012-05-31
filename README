@@ -1,3 +1,9 @@
+This repo is a copy of Python-JabberBot adding some features I need.
+
+Added features include:
+* Ability to work with Google Apps for Domains accounts
+* Ability to override handling of contacts that behave like MUCs (partych.at)
+* Ability to trigger behavior post subscribe and unsubscribe events
 
 Python-JabberBot
 ~~~~~~~~~~~~~~~~
