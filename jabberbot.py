@@ -91,9 +91,9 @@ class JabberBot(object):
     PING_FREQUENCY = 0  # Set to the number of seconds, e.g. 60.
     PING_TIMEOUT = 2  # Seconds to wait for a response.
 
-    def __init__(self, username, password, res=None, debug=False,
-            privatedomain=False, acceptownmsgs=False, handlers=None,
-            command_prefix=''):
+    def __init__(self, username, password, hostname=None, port=5223, res=None,
+            debug=False, privatedomain=False, acceptownmsgs=False,
+            handlers=None, command_prefix=''):
         """Initializes the jabber bot and sets up commands.
 
         username and password should be clear ;)
@@ -131,6 +131,8 @@ class JabberBot(object):
         self.log = logging.getLogger(__name__)
         self.__username = username
         self.__password = password
+        self.__hostname = hostname
+        self.__port = port
         self.jid = xmpp.JID(self.__username)
         self.res = (res or self.__class__.__name__)
         self.conn = None
@@ -205,7 +207,10 @@ class JabberBot(object):
                 conn = xmpp.Client(self.jid.getDomain(), debug=[])
 
             #connection attempt
-            conres = conn.connect()
+            if self.__hostname:
+                conres = conn.connect((self.__hostname, self.__port))
+            else:
+                conres = conn.connect()
             if not conres:
                 self.log.error('unable to connect to server %s.' %
                         self.jid.getDomain())
@@ -214,7 +219,8 @@ class JabberBot(object):
                 self.log.warning('unable to establish secure connection '\
                 '- TLS failed!')
 
-            authres = conn.auth(self.jid.getNode(), self.__password, self.res)
+            username = self.jid.getNode()
+            authres = conn.auth(username, self.__password, self.res)
             if not authres:
                 self.log.error('unable to authorize with server.')
                 return None
@@ -506,6 +512,15 @@ class JabberBot(object):
             if not only_available or show is self.AVAILABLE:
                 self.send(jid, message)
 
+    def subscribe(self, jid):
+        pass
+
+    def subscribed(self, jid):
+        pass
+
+    def unsubscribed(self, jid):
+        pass
+
     def callback_presence(self, conn, presence):
         jid, type_, show, status = presence.getFrom(), \
                 presence.getType(), presence.getShow(), \
@@ -582,15 +597,18 @@ class JabberBot(object):
 
             if subscription in (None, 'none'):
                 self.send(jid, self.MSG_AUTHORIZE_ME)
+            self.subscribe(jid)
         elif type_ == 'subscribed':
             # Authorize any pending requests for that JID
             self.roster.Authorize(jid)
+            self.subscribed(jid)
         elif type_ == 'unsubscribed':
             # Authorization was not granted
             self.send(jid, self.MSG_NOT_AUTHORIZED)
             self.roster.Unauthorize(jid)
+            self.unsubscribed(jid)
 
-    def callback_message(self, conn, mess):
+    def callback_message(self, conn, mess, noreply_unknown=False):
         """Messages sent to the bot will arrive here.
         Command handling + routing is done in this function."""
 
@@ -663,7 +681,7 @@ class JabberBot(object):
             # In private chat, it's okay for the bot to always respond.
             # In group chat, the bot should silently ignore commands it
             # doesn't understand or aren't handled by unknown_command().
-            if type == 'groupchat':
+            if type == 'groupchat' or noreply_unknown:
                 default_reply = None
             else:
                 default_reply = self.MSG_UNKNOWN_COMMAND % {
