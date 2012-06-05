@@ -92,8 +92,8 @@ class JabberBot(object):
     PING_TIMEOUT = 2  # Seconds to wait for a response.
 
     def __init__(self, username, password, hostname=None, port=5223, res=None,
-            debug=False, privatedomain=False, acceptownmsgs=False,
-            handlers=None, command_prefix=''):
+            debug=False, privatedomain=False, privatedomains=None,
+            acceptownmsgs=False, handlers=None, command_prefix=''):
         """Initializes the jabber bot and sets up commands.
 
         username and password should be clear ;)
@@ -143,6 +143,7 @@ class JabberBot(object):
         self.__threads = {}
         self.__lastping = time.time()
         self.__privatedomain = privatedomain
+        self.__privatedomains = privatedomains
         self.__acceptownmsgs = acceptownmsgs
         self.__command_prefix = command_prefix
 
@@ -579,12 +580,18 @@ class JabberBot(object):
                 # Use the specified domain
                 domain = self.__privatedomain
 
-            # Check if the sender is in the private domain
             user_domain = jid.getDomain()
-            if domain != user_domain:
-                self.log.info('Ignoring subscribe request: %s does not '\
-                'match private domain (%s)' % (user_domain, domain))
-                return
+            # Check if the sender is in the private domain
+            if type(domain) == list:
+                if user_domain not in domain:
+                    self.log.info('Ignoring subscribe request: %s does not '\
+                    'match private domain (%s)' % (user_domain, domain))
+                    return
+            else:
+                if domain != user_domain:
+                    self.log.info('Ignoring subscribe request: %s does not '\
+                    'match private domain (%s)' % (user_domain, domain))
+                    return
 
         if type_ == 'subscribe':
             # Incoming presence subscription request
@@ -809,6 +816,7 @@ class JabberBot(object):
         if connect_callback:
             connect_callback()
         self.__lastping = time.time()
+        requested = False
 
         while not self.__finished:
             try:
@@ -817,11 +825,13 @@ class JabberBot(object):
             except KeyboardInterrupt:
                 self.log.info('bot stopped by user request. '\
                     'shutting down.')
+                requested = True
                 break
 
         self.shutdown()
 
         if disconnect_callback:
             disconnect_callback()
+        return requested
 
 # vim: expandtab tabstop=4 shiftwidth=4 softtabstop=4
